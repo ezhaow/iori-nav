@@ -85,37 +85,37 @@ let currentCategoryFilter = '';
 
 // Initialize Page Size
 if (pageSizeSelect) {
-    pageSizeSelect.value = pageSize; // Set default in UI
-    pageSizeSelect.addEventListener('change', () => {
-        pageSize = parseInt(pageSizeSelect.value);
-        currentPage = 1;
-        fetchConfigs(currentPage, currentSearchKeyword, currentCategoryFilter);
-    });
+  pageSizeSelect.value = pageSize; // Set default in UI
+  pageSizeSelect.addEventListener('change', () => {
+    pageSize = parseInt(pageSizeSelect.value);
+    currentPage = 1;
+    fetchConfigs(currentPage, currentSearchKeyword, currentCategoryFilter);
+  });
 }
 
 // Initialize Category Filter
 if (categoryFilter) {
-    // Populate categories will happen in fetchCategoriesForFilter or similar
-    // Re-use the existing logic or add a new fetch
-    fetch('/api/categories?pageSize=999')
-        .then(res => res.json())
-        .then(data => {
-            if (data.code === 200 && data.data) {
-                // Keep the default "All" option
-                data.data.forEach(cat => {
-                    const option = document.createElement('option');
-                    option.value = cat.catelog; // Use name for filtering as API expects name or ID? API index.js uses name if provided as 'catalog' param
-                    option.textContent = cat.catelog;
-                    categoryFilter.appendChild(option);
-                });
-            }
+  // Populate categories will happen in fetchCategoriesForFilter or similar
+  // Re-use the existing logic or add a new fetch
+  fetch('/api/categories?pageSize=999')
+    .then(res => res.json())
+    .then(data => {
+      if (data.code === 200 && data.data) {
+        // Keep the default "All" option
+        data.data.forEach(cat => {
+          const option = document.createElement('option');
+          option.value = cat.catelog; // Use name for filtering as API expects name or ID? API index.js uses name if provided as 'catalog' param
+          option.textContent = cat.catelog;
+          categoryFilter.appendChild(option);
         });
-
-    categoryFilter.addEventListener('change', () => {
-        currentCategoryFilter = categoryFilter.value;
-        currentPage = 1;
-        fetchConfigs(currentPage, currentSearchKeyword, currentCategoryFilter);
+      }
     });
+
+  categoryFilter.addEventListener('change', () => {
+    currentCategoryFilter = categoryFilter.value;
+    currentPage = 1;
+    fetchConfigs(currentPage, currentSearchKeyword, currentCategoryFilter);
+  });
 }
 
 let pendingCurrentPage = 1;
@@ -180,15 +180,15 @@ function fetchConfigs(page = currentPage, keyword = currentSearchKeyword, catalo
   const params = new URLSearchParams();
   params.append('page', page);
   params.append('pageSize', pageSize);
-  
+
   if (keyword) {
-      params.append('keyword', keyword);
+    params.append('keyword', keyword);
   }
-  
+
   if (catalog) {
-      params.append('catalog', catalog);
+    params.append('catalog', catalog);
   }
-  
+
   url = `/api/config?${params.toString()}`;
 
   fetch(url)
@@ -230,13 +230,13 @@ function renderConfig(configs) {
     card.className = 'site-card group bg-white border border-primary-100/60 rounded-xl shadow-sm overflow-hidden relative';
     card.draggable = true;
     card.dataset.id = config.id;
-    
+
     // Logo render logic
     let logoHtml = '';
     if (normalizedLogo) {
-        logoHtml = `<img src="${escapeHTML(normalizedLogo)}" alt="${safeName}" class="w-10 h-10 rounded-lg object-cover bg-gray-100">`;
+      logoHtml = `<img src="${escapeHTML(normalizedLogo)}" alt="${safeName}" class="w-10 h-10 rounded-lg object-cover bg-gray-100">`;
     } else {
-        logoHtml = `<div class="w-10 h-10 rounded-lg bg-primary-600 flex items-center justify-center text-white font-semibold text-lg shadow-inner">${cardInitial}</div>`;
+      logoHtml = `<div class="w-10 h-10 rounded-lg bg-primary-600 flex items-center justify-center text-white font-semibold text-lg shadow-inner">${cardInitial}</div>`;
     }
 
     card.innerHTML = `
@@ -303,48 +303,48 @@ function setupDragAndDrop() {
   let draggedItem = null;
 
   cards.forEach(card => {
-    card.addEventListener('dragstart', function(e) {
+    card.addEventListener('dragstart', function (e) {
       draggedItem = this;
       this.classList.add('opacity-50', 'scale-95');
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/html', this.innerHTML);
     });
 
-    card.addEventListener('dragend', function() {
+    card.addEventListener('dragend', function () {
       this.classList.remove('opacity-50', 'scale-95');
       draggedItem = null;
       document.querySelectorAll('.site-card').forEach(c => c.classList.remove('border-2', 'border-accent-500'));
     });
 
-    card.addEventListener('dragover', function(e) {
+    card.addEventListener('dragover', function (e) {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
       this.classList.add('border-2', 'border-accent-500');
     });
-    
-    card.addEventListener('dragleave', function() {
+
+    card.addEventListener('dragleave', function () {
       this.classList.remove('border-2', 'border-accent-500');
     });
 
-    card.addEventListener('drop', function(e) {
+    card.addEventListener('drop', function (e) {
       e.preventDefault();
       this.classList.remove('border-2', 'border-accent-500');
-      
+
       if (draggedItem !== this) {
         // Swap or Insert Logic
         // Here we use "insert before" or "insert after" depending on position
         // For simplicity in a grid, swapping index in DOM is easiest to visualize
-        
+
         const allCards = Array.from(configGrid.children);
         const draggedIdx = allCards.indexOf(draggedItem);
         const droppedIdx = allCards.indexOf(this);
-        
+
         if (draggedIdx < droppedIdx) {
           this.after(draggedItem);
         } else {
           this.before(draggedItem);
         }
-        
+
         // Save new order
         saveSortOrder();
       }
@@ -355,24 +355,24 @@ function setupDragAndDrop() {
 function saveSortOrder() {
   const cards = document.querySelectorAll('#configGrid .site-card');
   const updates = [];
-  
+
   // Calculate global start index
   const startIndex = (currentPage - 1) * pageSize;
-  
+
   cards.forEach((card, index) => {
     const id = card.dataset.id;
     // Set new sort order relative to the page + index
     // Note: This relies on simple integer sorting.
     const newSortOrder = startIndex + index;
-    
+
     // Optimistic UI: We assume it works.
     // Ideally we only update if changed, but for simplicity we update the list.
     // To avoid flood, we can check if it's already correct in `allConfigs` but `allConfigs` is not updated yet.
-    
+
     updates.push(fetch(`/api/config/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         // We need other fields? api/config/[id] PUT requires name, url etc.
         // The API implementation requires name, url, etc.
         // I need to fetch the existing data or change the API to allow partial updates.
@@ -382,12 +382,12 @@ function saveSortOrder() {
       })
     }));
   });
-  
+
   if (updates.length > 0) {
-      showMessage('正在保存排序...', 'info');
-      Promise.all(updates)
-        .then(() => showMessage('排序已保存', 'success'))
-        .catch(err => showMessage('保存排序失败: ' + err.message, 'error'));
+    showMessage('正在保存排序...', 'info');
+    Promise.all(updates)
+      .then(() => showMessage('排序已保存', 'success'))
+      .catch(err => showMessage('保存排序失败: ' + err.message, 'error'));
   }
 }
 
@@ -536,44 +536,44 @@ function setupCategoryDragAndDrop() {
   let draggedItem = null;
 
   cards.forEach(card => {
-    card.addEventListener('dragstart', function(e) {
+    card.addEventListener('dragstart', function (e) {
       draggedItem = this;
       this.classList.add('opacity-50', 'scale-95');
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/html', this.innerHTML);
     });
 
-    card.addEventListener('dragend', function() {
+    card.addEventListener('dragend', function () {
       this.classList.remove('opacity-50', 'scale-95');
       draggedItem = null;
       document.querySelectorAll('#categoryGrid .site-card').forEach(c => c.classList.remove('border-2', 'border-accent-500'));
     });
 
-    card.addEventListener('dragover', function(e) {
+    card.addEventListener('dragover', function (e) {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
       this.classList.add('border-2', 'border-accent-500');
     });
-    
-    card.addEventListener('dragleave', function() {
+
+    card.addEventListener('dragleave', function () {
       this.classList.remove('border-2', 'border-accent-500');
     });
 
-    card.addEventListener('drop', function(e) {
+    card.addEventListener('drop', function (e) {
       e.preventDefault();
       this.classList.remove('border-2', 'border-accent-500');
-      
+
       if (draggedItem !== this) {
         const allCards = Array.from(categoryGrid.children);
         const draggedIdx = allCards.indexOf(draggedItem);
         const droppedIdx = allCards.indexOf(this);
-        
+
         if (draggedIdx < droppedIdx) {
           this.after(draggedItem);
         } else {
           this.before(draggedItem);
         }
-        
+
         // Save new order
         saveCategorySortOrder();
       }
@@ -584,23 +584,23 @@ function setupCategoryDragAndDrop() {
 function saveCategorySortOrder() {
   const cards = document.querySelectorAll('#categoryGrid .site-card');
   const updates = [];
-  
+
   // Calculate global start index based on current page
   // Note: Categories usually are few, so paging might not be heavy used, but we support it.
   const startIndex = (categoryCurrentPage - 1) * categoryPageSize;
-  
+
   cards.forEach((card, index) => {
     const id = card.dataset.id;
     // Set new sort order. Lower number = higher priority.
     // We simply use index as sort order.
     const newSortOrder = startIndex + index;
-    
+
     // We reuse the update endpoint.
     // The backend expects full object or partial? api/categories/[id] PUT handles partial update
     updates.push(fetch(`/api/categories/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         // We only need to send what we change if the backend supports it.
         // Checking backend code: functions/api/categories/[id].js
         // It reads: const { catelog, sort_order } = await request.json();
@@ -613,17 +613,17 @@ function saveCategorySortOrder() {
         // But based on `editCategoryForm` it sends `catelog` and `sort_order`.
         // If I only send `sort_order`, `catelog` might be undefined/null.
         // So I should send the name too.
-        catelog: categoriesData.find(c => c.id == id).catelog, 
+        catelog: categoriesData.find(c => c.id == id).catelog,
         sort_order: newSortOrder
       })
     }));
   });
-  
+
   if (updates.length > 0) {
-      showMessage('正在保存分类排序...', 'info');
-      Promise.all(updates)
-        .then(() => showMessage('分类排序已保存', 'success'))
-        .catch(err => showMessage('保存分类排序失败: ' + err.message, 'error'));
+    showMessage('正在保存分类排序...', 'info');
+    Promise.all(updates)
+      .then(() => showMessage('分类排序已保存', 'success'))
+      .catch(err => showMessage('保存分类排序失败: ' + err.message, 'error'));
   }
 }
 
@@ -682,7 +682,7 @@ function showModalMessage(modalId, message, type) {
     container.textContent = message;
     container.className = 'modal-message ' + type;
     container.style.display = 'block';
-    
+
     // Auto hide success/info messages after 3 seconds
     if (type === 'success' || type === 'info') {
       setTimeout(() => {
@@ -735,16 +735,16 @@ importFile.addEventListener('change', function (e) {
 
   if (fileName.endsWith('.html') || fileName.endsWith('.htm')) {
     // Chrome 书签 HTML 格式导入
-    reader.onload = function(event) {
+    reader.onload = function (event) {
       try {
         const htmlContent = event.target.result;
         const bookmarks = parseChromeBookmarks(htmlContent);
-        
+
         if (bookmarks.length === 0) {
           showMessage('未在文件中找到有效书签', 'error');
           return;
         }
-        
+
         // 显示预览并确认导入
         showImportPreview(bookmarks);
       } catch (error) {
@@ -754,10 +754,10 @@ importFile.addEventListener('change', function (e) {
     reader.readAsText(file, 'UTF-8');
   } else if (fileName.endsWith('.json')) {
     // 系统导出的 JSON 格式导入
-    reader.onload = function(event) {
+    reader.onload = function (event) {
       try {
         const data = JSON.parse(event.target.result);
-        
+
         // 简单确认后直接导入
         if (confirm('确定要导入这个 JSON 文件中的书签吗？')) {
           performImport(data);
@@ -770,7 +770,7 @@ importFile.addEventListener('change', function (e) {
   } else {
     showMessage('不支持的文件格式。请选择 .html 或 .json 文件。', 'error');
   }
-  
+
   // Reset file input to allow re-selecting the same file
   e.target.value = '';
 })
@@ -805,24 +805,24 @@ function parseChromeBookmarks(html) {
   const doc = parser.parseFromString(html, 'text/html');
   const bookmarks = [];
   let currentCategory = '未分类';
-  
+
   function traverseNode(node, category) {
     if (node.nodeType === Node.ELEMENT_NODE) {
       // H3 标签表示文件夹(分类)
       if (node.tagName === 'H3') {
         currentCategory = node.textContent.trim() || '未分类';
         // 跳过 "书签栏"、"其他书签" 等顶层文件夹
-        if (currentCategory === '书签栏' || currentCategory === 'Bookmarks Bar' || 
-            currentCategory === '其他书签' || currentCategory === 'Other Bookmarks') {
+        if (currentCategory === '书签栏' || currentCategory === 'Bookmarks Bar' ||
+          currentCategory === '其他书签' || currentCategory === 'Other Bookmarks') {
           currentCategory = '未分类';
         }
       }
-      
+
       // A 标签表示书签
       if (node.tagName === 'A') {
         const url = node.getAttribute('HREF') || node.getAttribute('href');
         const name = node.textContent.trim();
-        
+
         if (url && name) {
           bookmarks.push({
             name: name,
@@ -834,27 +834,27 @@ function parseChromeBookmarks(html) {
           });
         }
       }
-      
+
       // DL 标签表示列表容器,递归处理子节点
       if (node.tagName === 'DL') {
         const parent = node.previousElementSibling;
-        const folderCategory = (parent && parent.tagName === 'H3') 
-          ? parent.textContent.trim() 
+        const folderCategory = (parent && parent.tagName === 'H3')
+          ? parent.textContent.trim()
           : category;
-        
+
         Array.from(node.children).forEach(child => {
           traverseNode(child, folderCategory);
         });
         return;
       }
     }
-    
+
     // 递归处理子节点
     Array.from(node.children || []).forEach(child => {
       traverseNode(child, category);
     });
   }
-  
+
   traverseNode(doc.body, currentCategory);
   return bookmarks;
 }
@@ -864,17 +864,17 @@ function showImportPreview(bookmarks) {
   const previewModal = document.createElement('div');
   previewModal.className = 'modal';
   previewModal.style.display = 'block';
-  
+
   // 统计分类信息
   const categoryStats = {};
   bookmarks.forEach(b => {
     categoryStats[b.catelog] = (categoryStats[b.catelog] || 0) + 1;
   });
-  
+
   const categoryList = Object.entries(categoryStats)
     .map(([cat, count]) => `<li>${escapeHTML(cat)}: ${count} 个书签</li>`)
     .join('');
-  
+
   previewModal.innerHTML = `
     <div class="modal-content">
       <span class="modal-close" id="closePreviewModal">×</span>
@@ -895,24 +895,24 @@ function showImportPreview(bookmarks) {
       </div>
     </div>
   `;
-  
+
   document.body.appendChild(previewModal);
-  
+
   // 关闭预览
   document.getElementById('closePreviewModal').addEventListener('click', () => {
     document.body.removeChild(previewModal);
   });
-  
+
   document.getElementById('cancelImport').addEventListener('click', () => {
     document.body.removeChild(previewModal);
   });
-  
+
   // 确认导入
   document.getElementById('confirmImport').addEventListener('click', () => {
     document.body.removeChild(previewModal);
     performImport(bookmarks);
   });
-  
+
   // 点击遮罩关闭
   previewModal.addEventListener('click', (e) => {
     if (e.target === previewModal) {
@@ -924,7 +924,7 @@ function showImportPreview(bookmarks) {
 // 执行导入
 function performImport(dataToImport) {
   showMessage('正在导入,请稍候...', 'success');
-  
+
   fetch('/api/config/import', {
     method: 'POST',
     headers: {
@@ -1331,9 +1331,9 @@ if (addBookmarkForm) {
         if (data.code === 201) {
           showModalMessage('addBookmarkModal', '添加成功', 'success');
           setTimeout(() => {
-             addBookmarkModal.style.display = 'none';
-             addBookmarkForm.reset();
-             fetchConfigs();
+            addBookmarkModal.style.display = 'none';
+            addBookmarkForm.reset();
+            fetchConfigs();
           }, 1000);
         } else {
           showModalMessage('addBookmarkModal', data.message, 'error');
@@ -1383,7 +1383,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let shouldStopBulkGeneration = false;
   let aiRequestDelay = 1500; // Default value, will be updated from config
-
   async function fetchPublicConfig() {
     try {
       const response = await fetch('/api/public-config');
@@ -1412,19 +1411,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const closeModal = () => {
     if (bulkProgressView.style.display !== 'none') {
-        if (!confirm('批量生成正在进行中，确定要关闭吗？')) {
-            return;
-        }
-        shouldStopBulkGeneration = true;
+      if (!confirm('批量生成正在进行中，确定要关闭吗？')) {
+        return;
+      }
+      shouldStopBulkGeneration = true;
     }
     aiSettingsModal.style.display = 'none';
   };
   closeBtn.addEventListener('click', closeModal);
   cancelBtn.addEventListener('click', closeModal);
   aiSettingsModal.addEventListener('click', (e) => {
-      if (e.target === aiSettingsModal) {
-          closeModal();
-      }
+    if (e.target === aiSettingsModal) {
+      closeModal();
+    }
   });
 
   if (providerSelector) {
@@ -1445,8 +1444,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   batchCompleteBtn.addEventListener('click', handleBulkGenerate);
   stopBulkBtn.addEventListener('click', () => {
-      shouldStopBulkGeneration = true;
-      showMessage('正在停止...', 'info');
+    shouldStopBulkGeneration = true;
+    showMessage('正在停止...', 'info');
   });
 
   // --- Helper Functions ---
@@ -1457,7 +1456,7 @@ document.addEventListener('DOMContentLoaded', () => {
       currentAIConfig = JSON.parse(savedConfig);
       // Ensure provider is valid (handle legacy config)
       if (!['gemini', 'openai', 'workers-ai'].includes(currentAIConfig.provider)) {
-          currentAIConfig.provider = 'workers-ai';
+        currentAIConfig.provider = 'workers-ai';
       }
     }
   }
@@ -1468,7 +1467,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateUIFromConfig() {
     if (providerSelector) {
-        providerSelector.value = currentAIConfig.provider;
+      providerSelector.value = currentAIConfig.provider;
     }
 
     const provider = currentAIConfig.provider;
@@ -1477,22 +1476,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Show/Hide Inputs based on Provider
     if (provider === 'workers-ai') {
-        apiKeyInput.parentElement.style.display = 'none';
-        baseUrlGroup.style.display = 'none';
-        modelNameInput.parentElement.style.display = 'none'; // Configured via env var
+      apiKeyInput.parentElement.style.display = 'none';
+      baseUrlGroup.style.display = 'none';
+      modelNameInput.parentElement.style.display = 'none'; // Configured via env var
     } else {
-        apiKeyInput.parentElement.style.display = 'block';
-        modelNameInput.parentElement.style.display = 'block';
+      apiKeyInput.parentElement.style.display = 'block';
+      modelNameInput.parentElement.style.display = 'block';
 
-        if (provider === 'gemini') {
-            modelNameInput.value = currentAIConfig.model || 'gemini-1.5-flash';
-            modelNameInput.placeholder = 'gemini-1.5-flash';
-            baseUrlGroup.style.display = 'none';
-        } else if (provider === 'openai') {
-            modelNameInput.value = currentAIConfig.model || 'gpt-3.5-turbo';
-            modelNameInput.placeholder = 'gpt-3.5-turbo';
-            baseUrlGroup.style.display = 'block';
-        }
+      if (provider === 'gemini') {
+        modelNameInput.value = currentAIConfig.model || 'gemini-1.5-flash';
+        modelNameInput.placeholder = 'gemini-1.5-flash';
+        baseUrlGroup.style.display = 'none';
+      } else if (provider === 'openai') {
+        modelNameInput.value = currentAIConfig.model || 'gpt-3.5-turbo';
+        modelNameInput.placeholder = 'gpt-3.5-turbo';
+        baseUrlGroup.style.display = 'block';
+      }
     }
   }
 
@@ -1503,33 +1502,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let systemPrompt, userPrompt;
     if (generateName) {
-        systemPrompt = "You are a helpful assistant. You must response with valid JSON.";
-        userPrompt = `分析链接：'${url}'。请生成一个简短的网站名称（name，不超过10字）和中文简介（description，不超过30字）。请严格只返回 JSON 格式，例如：{"name": "名称", "description": "简介"}。`;
+      systemPrompt = "You are a helpful assistant. You must response with valid JSON.";
+      userPrompt = `分析链接：'${url}'。请生成一个简短的网站名称（name，不超过10字）和中文简介（description，不超过30字）。请严格只返回 JSON 格式，例如：{"name": "名称", "description": "简介"}。`;
     } else {
-        systemPrompt = "You are a helpful assistant that generates concise and accurate descriptions for bookmarks.";
-        userPrompt = `为以下书签生成一个简洁的中文描述（不超过30字）。请直接返回描述内容，不要包含"书签名称"、"描述"等前缀，也不要使用"标题: 描述"的格式。书签名称：'${name}'，链接：'${url}'`;
+      systemPrompt = "You are a helpful assistant that generates concise and accurate descriptions for bookmarks.";
+      userPrompt = `为以下书签生成一个简洁的中文描述（不超过30字）。请直接返回描述内容，不要包含"书签名称"、"描述"等前缀，也不要使用"标题: 描述"的格式。书签名称：'${name}'，链接：'${url}'`;
     }
 
     let responseText = '';
 
     try {
       if (provider === 'workers-ai') {
-          const response = await fetch('/api/ai-chat', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                  messages: [
-                      { role: "system", content: systemPrompt },
-                      { role: "user", content: userPrompt }
-                  ]
-              })
-          });
-          if (!response.ok) {
-              const errorText = await response.text();
-              throw new Error(`Workers AI error: ${errorText}`);
-          }
-          const data = await response.json();
-          responseText = typeof data.data === 'string' ? data.data : (data.data.response || JSON.stringify(data.data));
+        const response = await fetch('/api/ai-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: userPrompt }
+            ]
+          })
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Workers AI error: ${errorText}`);
+        }
+        const data = await response.json();
+        responseText = typeof data.data === 'string' ? data.data : (data.data.response || JSON.stringify(data.data));
 
       } else if (provider === 'gemini') {
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -1562,7 +1561,7 @@ document.addEventListener('DOMContentLoaded', () => {
               { role: "user", content: userPrompt }
             ],
             temperature: 0.7,
-          
+
           }),
         });
         if (!response.ok) {
@@ -1576,15 +1575,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (generateName) {
-          try {
-             const jsonStr = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-             return JSON.parse(jsonStr);
-          } catch (e) {
-             console.warn('JSON parse failed, returning raw text as description', e);
-             return { description: responseText, name: '' };
-          }
-      } else {
+        try {
+          const jsonStr = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+          return JSON.parse(jsonStr);
+        } catch (e) {
+          console.warn('JSON parse failed, returning raw text as description', e);
           return { description: responseText, name: '' };
+        }
+      } else {
+        return { description: responseText, name: '' };
       }
 
     } catch (error) {
@@ -1601,30 +1600,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Validation
     if (currentAIConfig.provider !== 'workers-ai') {
-        if (!currentAIConfig.apiKey || !currentAIConfig.model) {
-            showMessage('请先配置 API Key 和模型名称', 'error');
-            return;
-        }
-        if (currentAIConfig.provider === 'openai' && !currentAIConfig.baseUrl) {
-            showMessage('使用 OpenAI 兼容模式时，Base URL 是必填项', 'error');
-            return;
-        }
+      if (!currentAIConfig.apiKey || !currentAIConfig.model) {
+        showMessage('请先配置 API Key 和模型名称', 'error');
+        return;
+      }
+      if (currentAIConfig.provider === 'openai' && !currentAIConfig.baseUrl) {
+        showMessage('使用 OpenAI 兼容模式时，Base URL 是必填项', 'error');
+        return;
+      }
     }
 
     showMessage('正在扫描所有书签，请稍候...', 'info');
     let linksToUpdate = [];
     try {
-        const response = await fetch('/api/get-empty-desc-sites');
-        const result = await response.json();
+      const response = await fetch('/api/get-empty-desc-sites');
+      const result = await response.json();
 
-        if (!response.ok || result.code !== 200) {
-            showMessage(result.message || '获取待处理列表失败', 'error');
-            return;
-        }
-        linksToUpdate = result.data;
-    } catch (error) {
-        showMessage('扫描书签时发生网络错误', 'error');
+      if (!response.ok || result.code !== 200) {
+        showMessage(result.message || '获取待处理列表失败', 'error');
         return;
+      }
+      linksToUpdate = result.data;
+    } catch (error) {
+      showMessage('扫描书签时发生网络错误', 'error');
+      return;
     }
 
     if (linksToUpdate.length === 0) {
@@ -1651,7 +1650,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const link = linksToUpdate[i];
-      
+
       try {
         const { description } = await getAIDescription(currentAIConfig, link);
         const updateResponse = await fetch('/api/update-description', {
@@ -1669,7 +1668,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (error) {
         console.error(`Error processing ${link.name}:`, error);
       }
-      
+
       progressCounter.textContent = `${i + 1} / ${total}`;
       progressBar.style.width = `${((i + 1) / total) * 100}%`;
 
@@ -1684,32 +1683,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 如果是手动停止，等待2秒以确保数据库写入最终一致性
     if (shouldStopBulkGeneration) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
 
     // 如果有任何书签被更新（或操作被停止），则刷新列表
     if (completedCount > 0 || shouldStopBulkGeneration) {
-        fetchConfigs(currentPage);
+      fetchConfigs(currentPage);
     }
 
     // 根据结果显示最终消息
     let message = '';
     let messageType = 'success';
     if (shouldStopBulkGeneration) {
-        message = `操作已停止。成功更新 ${completedCount} 个书签。列表已刷新。`;
+      message = `操作已停止。成功更新 ${completedCount} 个书签。列表已刷新。`;
     } else {
-        if (completedCount === total && total > 0) {
-            message = `批量生成完成！成功更新了全部 ${total} 个书签。`;
-        } else if (completedCount > 0) {
-            message = `批量生成完成。成功更新 ${completedCount} / ${total} 个书签。`;
-            messageType = 'info';
-        } else if (total > 0) {
-            message = '批量生成完成，但未能成功更新任何书签。请检查控制台日志。';
-            messageType = 'error';
-        }
+      if (completedCount === total && total > 0) {
+        message = `批量生成完成！成功更新了全部 ${total} 个书签。`;
+      } else if (completedCount > 0) {
+        message = `批量生成完成。成功更新 ${completedCount} / ${total} 个书签。`;
+        messageType = 'info';
+      } else if (total > 0) {
+        message = '批量生成完成，但未能成功更新任何书签。请检查控制台日志。';
+        messageType = 'error';
+      }
     }
     if (message) {
-        showMessage(message, messageType);
+      showMessage(message, messageType);
     }
 
     shouldStopBulkGeneration = false;
@@ -1732,11 +1731,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Ensure config is loaded
     loadConfig();
-    
+
     // Check if AI is configured (if not workers-ai, need key)
     if (currentAIConfig.provider !== 'workers-ai' && !currentAIConfig.apiKey) {
-         showModalMessage(modalId, '请先在 AI 设置中配置 API Key', 'error');
-         return;
+      showModalMessage(modalId, '请先在 AI 设置中配置 API Key', 'error');
+      return;
     }
 
     // Loading State
@@ -1750,19 +1749,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const generateName = !name;
       const bookmark = { name: name || '未命名', url: url };
       const result = await getAIDescription(currentAIConfig, bookmark, generateName);
-      
+
       descInput.value = result.description;
       if (generateName && result.name) {
-          document.getElementById(nameInputId).value = result.name;
+        document.getElementById(nameInputId).value = result.name;
       }
       showModalMessage(modalId, '生成成功', 'success');
     } catch (error) {
       console.error(error);
       showModalMessage(modalId, '生成失败: ' + error.message, 'error');
     } finally {
-        // Restore State
-        btn.innerHTML = originalContent;
-        btn.disabled = false;
+      // Restore State
+      btn.innerHTML = originalContent;
+      btn.disabled = false;
     }
   }
 
