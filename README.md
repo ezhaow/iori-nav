@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <strong>在线体验:</strong> <a href="https://022311.xyz/">https://iori.hidns.vip</a>
+  <strong>在线体验:</strong> <a href="https://nav.022311.xyz/">https://nav.022311.xyz</a>
 </p>
 ---
 
